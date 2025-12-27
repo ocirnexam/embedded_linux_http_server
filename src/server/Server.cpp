@@ -17,16 +17,20 @@ HttpServer::~HttpServer() {
     close(m_serverSocket);
 }
 
-void HttpServer::readFileContent(std::string filename) {
-    std::ifstream file("/home/ocirnexam/repos/webUI/build/html/" + filename);
+bool HttpServer::readFileContent(std::string filename) {
     std::string str;
+    std::ifstream file("/home/ocirnexam/repos/webUI/build/html/" + filename);
     m_htmlContent = "";
+    if(file.fail()) {
+        return false;
+    }
     while (std::getline(file, str))
     {
         m_htmlContent += str;
         m_htmlContent.push_back('\n');
     }  
     file.close();
+    return true;
 }
 
 void HttpServer::start() {
@@ -58,10 +62,16 @@ void HttpServer::start() {
         parser.parse(readBuffer);
 
         // request answer
-        if(parser.getRequestedCommand() == HttpCommand::GET && parser.getRequestedFilename() != "") {
-            readFileContent(parser.getRequestedFilename());
-            m_htmlHeader = "HTTP/1.1 200 OK\r\n\r\n";
-        } else {
+        if(parser.getRequestedCommand() == HttpCommand::GET && 
+           parser.getRequestedFilename() != "") {
+            if(readFileContent(parser.getRequestedFilename())) {
+                m_htmlHeader = "HTTP/1.1 200 OK\r\n\r\n";
+            }
+            else {
+                m_htmlHeader = "HTTP/1.1 404 NOT_FOUND\r\n\r\n";
+            }
+        } 
+        else {
             m_htmlHeader = "HTTP/1.1 404 NOT_FOUND\r\n\r\n";
         }
         fullContentString = m_htmlHeader + m_htmlContent;

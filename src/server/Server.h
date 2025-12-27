@@ -21,7 +21,7 @@ class HttpServer {
         char m_clientIp[INET_ADDRSTRLEN];
         std::string m_htmlContent;
         std::string m_htmlHeader;
-        void readFileContent(std::string filename);
+        bool readFileContent(std::string filename);
     public:
         HttpServer(std::string ipAddress, uint16_t portNumber);
         ~HttpServer();
