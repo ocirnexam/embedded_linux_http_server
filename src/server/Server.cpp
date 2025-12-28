@@ -55,7 +55,6 @@ void HttpServer::start() {
             std::cout << "Failed to create client socket!" << std::endl;
         }
         inet_ntop(AF_INET, &m_clientInfo.sin_addr.s_addr, m_clientIp, INET_ADDRSTRLEN);
-        std::cout << "Client connected: " << m_clientIp << std::endl;
         
         // read request
         readCount = read(m_clientSocket, readBuffer, sizeof(readBuffer));
@@ -79,11 +78,12 @@ void HttpServer::start() {
         }
         else if (parser.getRequestedCommand() == HttpCommand::POST) {
             m_htmlHeader = "HTTP/1.1 200 OK\r\n\r\n";
+            m_htmlContent = "<html><body>";
             for (int i = 0; i < parser.getAmountOfArguments(); i++) {
                 Argument a = parser.getArgument(i);
-                std::cout << "Argument(" << a.name << ", " << a.value << ")" << std::endl;
-                m_htmlContent += "<html><body><h1>" + a.name + " is now set to: " + a.value + "</h1></body></html>";
+                m_htmlContent += "<h1>" + a.name + " is now set to: " + a.value + "</h1><br/>";
             }
+        m_htmlContent += "</body></html>";
         }
         else {
             m_htmlHeader = "HTTP/1.1 404 NOT_FOUND\r\n\r\n";

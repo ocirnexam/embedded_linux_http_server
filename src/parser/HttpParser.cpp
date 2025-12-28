@@ -11,33 +11,30 @@ void HttpParser::parse(char *httpPayload) {
     m_requestCommand = INVALID;
     m_requestedFile = "";
     int positionStart;
-    int positionHttp;
-    int position;
+    int positionEnd;
     std::string argumentName, argumentValue;
     uint8_t filenameLength = 0;
     if ((positionStart = payload.find("GET"))  != std::string::npos &&
-        (positionHttp  = payload.find("HTTP")) != std::string::npos) {
+        (positionEnd   = payload.find("HTTP")) != std::string::npos) {
         m_requestCommand = GET;
-        filenameLength = positionHttp - positionStart - FILENAME_LENGTH_PADDING;
+        filenameLength = positionEnd - positionStart - FILENAME_LENGTH_PADDING;
         m_requestedFile = payload.substr(FILENAME_LENGTH_PADDING - 1, filenameLength);
         if (m_requestedFile.empty()) {
             // means user requested /
             m_requestedFile = "index.html";
         }
-        std::cout << "Request Command: " << m_requestCommand << "\nRequested File: " << m_requestedFile << std::endl;
     }
     else if ((positionStart = payload.find("POST")) != std::string::npos) {
         std::cout << payload << std::endl;
         m_requestCommand = POST;
         m_arguments.clear();
-        if((position = payload.find("\r\n\r\n")) != std::string::npos) {
-            position += 4; // need to skip newline characters
-            positionStart = position;
-            position = payload.find("=", positionStart);
-            argumentName = payload.substr(positionStart, position - positionStart);
-            positionStart = position + 1;
-            position = payload.find("\r\n", positionStart);
-            argumentValue = payload.substr(positionStart, position - positionStart);
+        if((positionStart = payload.find("\r\n\r\n")) != std::string::npos) {
+            positionStart += 4; // need to skip newline characters
+            positionEnd = payload.find("=", positionStart);
+            argumentName = payload.substr(positionStart, positionEnd - positionStart);
+            positionStart = positionEnd + 1;
+            positionEnd = payload.find("\r\n", positionStart);
+            argumentValue = payload.substr(positionStart, positionEnd - positionStart);
             m_arguments.push_back({.name = argumentName, .value = argumentValue});
         }
     }
