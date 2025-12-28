@@ -49,6 +49,7 @@ void HttpServer::start() {
         return;
     }
     while(1) {
+        m_htmlContent = "";
         m_clientSocket = accept(m_serverSocket, (SocketAddress *)&m_clientInfo, &m_socketLength);
         if(m_clientSocket == -1) {
             std::cout << "Failed to create client socket!" << std::endl;
@@ -59,6 +60,11 @@ void HttpServer::start() {
         // read request
         readCount = read(m_clientSocket, readBuffer, sizeof(readBuffer));
         readBuffer[readCount] = 0;
+        //repeat reads until complete command received
+        while(strstr(readBuffer, "\r\n\r\n") == NULL) {
+            readCount += read(m_clientSocket, &readBuffer[readCount], sizeof(readBuffer) - readCount);
+            readBuffer[readCount] = 0;
+        }
         parser.parse(readBuffer);
 
         // request answer
@@ -70,7 +76,15 @@ void HttpServer::start() {
             else {
                 m_htmlHeader = "HTTP/1.1 404 NOT_FOUND\r\n\r\n";
             }
-        } 
+        }
+        else if (parser.getRequestedCommand() == HttpCommand::POST) {
+            m_htmlHeader = "HTTP/1.1 200 OK\r\n\r\n";
+            for (int i = 0; i < parser.getAmountOfArguments(); i++) {
+                Argument a = parser.getArgument(i);
+                std::cout << "Argument(" << a.name << ", " << a.value << ")" << std::endl;
+                m_htmlContent += "<html><body><h1>" + a.name + " is now set to: " + a.value + "</h1></body></html>";
+            }
+        }
         else {
             m_htmlHeader = "HTTP/1.1 404 NOT_FOUND\r\n\r\n";
         }
